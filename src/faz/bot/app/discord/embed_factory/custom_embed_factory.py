@@ -9,7 +9,7 @@ from nextcord import Interaction
 from nextcord.types.embed import EmbedType
 
 
-class CustomEmbed(Embed):
+class CustomEmbedFactory(Embed):
     def __init__(
         self,
         interaction: Interaction[Any],

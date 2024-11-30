@@ -8,10 +8,10 @@ from nextcord import Colour
 from nextcord import Interaction
 from nextcord.types.embed import EmbedType
 
-from faz.bot.app.discord.embed.custom_embed import CustomEmbed
+from faz.bot.app.discord.embed_factory.custom_embed_factory import CustomEmbedFactory
 
 
-class PaginationEmbed[T](CustomEmbed):
+class PaginationEmbedFactory[T](CustomEmbedFactory):
     def __init__(
         self,
         interaction: Interaction[Any],
@@ -90,7 +90,7 @@ class PaginationEmbed[T](CustomEmbed):
         self._current_page = value
 
     @abstractmethod
-    def get_embed_page(self, page: int) -> PaginationEmbed:
+    def get_embed_page(self, page: int) -> PaginationEmbedFactory:
         """Abstract method to get the embed for a specific page.
 
         This method must be implemented in subclasses to define how the embed content

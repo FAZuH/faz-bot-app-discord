@@ -7,8 +7,10 @@ from uuid import UUID
 
 from nextcord.ui import StringSelect
 
-from faz.bot.app.discord.embed.player_history_embed import PlayerHistoryEmbed
-from faz.bot.app.discord.select.player_history_data_options import PlayerHistoryDataOptions
+from faz.bot.app.discord.embed_factory.wynn_history.player_history_embed_factory import (
+    PlayerHistoryEmbedFactory,
+)
+from faz.bot.app.discord.select.player_history_data_option import PlayerHistoryDataOption
 from faz.bot.app.discord.select.player_history_data_select import PlayerHistoryDataSelect
 from faz.bot.app.discord.view._base_pagination_view import BasePaginationView
 
@@ -35,7 +37,7 @@ class PlayerHistoryView(BasePaginationView):
 
         self._character_labels: dict[str, str] = {}
 
-        self._embed = PlayerHistoryEmbed(
+        self._embed = PlayerHistoryEmbedFactory(
             self,
             self._player,
             self._period_begin,
@@ -44,22 +46,19 @@ class PlayerHistoryView(BasePaginationView):
         )
 
         self._selected_character: str | None = None
-        self._selected_data: PlayerHistoryDataOptions = PlayerHistoryDataOptions.ALL
+        self._selected_data: PlayerHistoryDataOption = PlayerHistoryDataOption.ALL
+
+        self._data_select = PlayerHistoryDataSelect(self._id_select_callback)
 
     @override
     async def run(self) -> None:
         """Initial method to setup and run the view."""
-        await self._add_id_select()
+        self.add_item(self._data_select)
         await self._add_character_select()
 
-        await self._set_embed_fields()
-        embed = self._get_embed_page()
+        await self.embed.setup()
+        embed = await self._get_embed_page()
         await self._interaction.send(embed=embed, view=self)
-
-    async def _add_id_select(self) -> None:
-        """Helper method to add data selection during setup."""
-        self._id_select = PlayerHistoryDataSelect(self._id_select_callback)
-        self.add_item(self._id_select)
 
     async def _add_character_select(self) -> None:
         """Helper method to add character selection during setup."""
@@ -91,11 +90,10 @@ class PlayerHistoryView(BasePaginationView):
         self.add_item(self._character_select)
 
     async def _id_select_callback(self, interaction: Interaction) -> None:
-        """Callback for ID selection."""
+        """Callback for data selection."""
         # Length of values is always 1
-        self._selected_data = self._id_select.get_selected_option()
-        await self._set_embed_fields()
-        embed = self._get_embed_page()
+        self._selected_data = self._data_select.get_selected_option()
+        embed = await self._get_embed_page()
         await interaction.edit(embed=embed, view=self)
 
     async def _character_select_callback(self, interaction: Interaction) -> None:
@@ -104,18 +102,13 @@ class PlayerHistoryView(BasePaginationView):
         self._selected_character = self._character_select.values[0]
         if self._selected_character.lower() == "total":
             self._selected_character = None
-        await self._set_embed_fields()
-        embed = self._get_embed_page()
+        embed = await self._get_embed_page()
         await interaction.edit(embed=embed, view=self)
 
-    async def _set_embed_fields(self) -> None:
-        """Sets PaginationEmbed items with fields based on selected options."""
-        fields = await self.embed.get_fields(self._selected_character, self._selected_data)
-        self.embed.items = fields
-
-    def _get_embed_page(self) -> PlayerHistoryEmbed:
+    async def _get_embed_page(self) -> PlayerHistoryEmbedFactory:
+        await self.embed.setup_fields(self._selected_character, self._selected_data)
         embed = self.embed.get_embed_page(self.embed.current_page)
-        embed.description += "\n`Data   : ` "
+        embed.description += "\n`Character : ` "
         if self._selected_character is None:
             embed.description += "All characters"
         else:
@@ -125,6 +118,6 @@ class PlayerHistoryView(BasePaginationView):
 
     @property
     @override
-    def embed(self) -> PlayerHistoryEmbed:
+    def embed(self) -> PlayerHistoryEmbedFactory:
         """The embed property."""
         return self._embed

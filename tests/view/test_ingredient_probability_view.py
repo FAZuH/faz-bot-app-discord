@@ -12,7 +12,7 @@ from faz.bot.app.discord.view.wynn_utils.ingredient_probability_view import (
 
 
 class TestUtilsIngredientProbabilityView(IsolatedAsyncioTestCase):
-    @patch("faz.bot.app.discord.view.wynn_utils.ingredient_probability_view.CustomEmbed")
+    @patch("faz.bot.app.discord.view.wynn_utils.ingredient_probability_view.CustomEmbedFactory")
     async def test_run(self, mock_embed: MagicMock) -> None:
         mock_bot = MagicMock()
         mock_interaction = create_autospec(Interaction, spec_set=True)

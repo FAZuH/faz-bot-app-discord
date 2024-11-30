@@ -7,7 +7,7 @@ from faz.bot.wynn.util.ingredient_drop_probability import IngredientDropProbabil
 from nextcord import Embed
 from nextcord import Interaction
 
-from faz.bot.app.discord.embed.custom_embed import CustomEmbed
+from faz.bot.app.discord.embed_factory.custom_embed_factory import CustomEmbedFactory
 from faz.bot.app.discord.view._base_view import BaseView
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ class IngredientProbabilityView(BaseView):
         self._ing_util = IngredientDropProbability(
             self._base_chance, self._loot_quality, self._loot_bonus
         )
-        self._embed = CustomEmbed(
+        self._embed = CustomEmbedFactory(
             self._interaction,
             title="Ingredient Chance Calculator",
             color=472931,

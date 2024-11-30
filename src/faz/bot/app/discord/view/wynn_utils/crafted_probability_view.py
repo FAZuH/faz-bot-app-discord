@@ -11,7 +11,7 @@ from nextcord import Interaction
 from nextcord.ui import Button
 from nextcord.ui import button
 
-from faz.bot.app.discord.embed.custom_embed import CustomEmbed
+from faz.bot.app.discord.embed_factory.custom_embed_factory import CustomEmbedFactory
 from faz.bot.app.discord.view._base_view import BaseView
 
 if TYPE_CHECKING:
@@ -44,8 +44,8 @@ class CraftedProbabilityView(BaseView):
             view=self,
         )
 
-    def _get_base_embed(self) -> CustomEmbed:
-        embed = CustomEmbed(
+    def _get_base_embed(self) -> CustomEmbedFactory:
+        embed = CustomEmbedFactory(
             self._interaction,
             title="Crafteds Probabilites Calculator",
             color=8894804,

@@ -12,7 +12,7 @@ from nextcord.ui import button
 from faz.bot.app.discord.view._base_view import BaseView
 
 if TYPE_CHECKING:
-    from faz.bot.app.discord.embed.pagination_embed import PaginationEmbed
+    from faz.bot.app.discord.embed_factory.pagination_embed_factory import PaginationEmbedFactory
 
 
 class BasePaginationView[T](BaseView, ABC):
@@ -109,4 +109,4 @@ class BasePaginationView[T](BaseView, ABC):
 
     @property
     @abstractmethod
-    def embed(self) -> PaginationEmbed[T]: ...
+    def embed(self) -> PaginationEmbedFactory[T]: ...

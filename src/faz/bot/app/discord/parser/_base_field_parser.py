@@ -4,10 +4,10 @@ from typing import Any, MutableSequence
 
 import pandas as pd
 
-from faz.bot.app.discord.embed.embed_field import EmbedField
+from faz.bot.app.discord.embed_factory.embed_field import EmbedField
 
 
-class BaseSeriesParser(ABC):
+class BaseFieldParser(ABC):
     def _common_numerical_float_string_parser(self, timestamp: str, value: float) -> str:
         ret = f"{timestamp}: `{value:.2f}`"
         return ret

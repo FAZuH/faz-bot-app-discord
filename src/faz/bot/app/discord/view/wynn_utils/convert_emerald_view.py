@@ -7,7 +7,7 @@ from faz.bot.wynn.util.emeralds import Emeralds
 from nextcord import Embed
 from nextcord import Interaction
 
-from faz.bot.app.discord.embed.custom_embed import CustomEmbed
+from faz.bot.app.discord.embed_factory.custom_embed_factory import CustomEmbedFactory
 from faz.bot.app.discord.view._base_view import BaseView
 
 if TYPE_CHECKING:
@@ -22,7 +22,7 @@ class ConvertEmeraldView(BaseView):
         self._emerald_string = emerald_string
         self._emeralds = Emeralds.from_string(emerald_string)
         self._emeralds.simplify()
-        self._embed = CustomEmbed(
+        self._embed = CustomEmbedFactory(
             interaction,
             title="Emerald Convertor",
             color=8894804,

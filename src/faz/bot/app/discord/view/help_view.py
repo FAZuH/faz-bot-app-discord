@@ -6,7 +6,7 @@ from nextcord import BaseApplicationCommand
 from nextcord import Colour
 from nextcord import Interaction
 
-from faz.bot.app.discord.embed.pagination_embed import PaginationEmbed
+from faz.bot.app.discord.embed_factory.pagination_embed_factory import PaginationEmbedFactory
 from faz.bot.app.discord.view._base_pagination_view import BasePaginationView
 
 if TYPE_CHECKING:
@@ -22,7 +22,7 @@ class HelpView(BasePaginationView):
     ) -> None:
         super().__init__(bot, interaction)
         self._commands = commands
-        self._embed = PaginationEmbed(
+        self._embed = PaginationEmbedFactory(
             self._interaction,
             commands,
             5,
@@ -35,7 +35,7 @@ class HelpView(BasePaginationView):
     async def run(self) -> None:
         await self._interaction.send(embed=self._get_embed_page(1), view=self)
 
-    def _get_embed_page(self, page: int) -> PaginationEmbed:
+    def _get_embed_page(self, page: int) -> PaginationEmbedFactory:
         """Generates embed page for page nth-page"""
         # title=f"Commands List : Page [{page}/{self._page_count}]",
         embed = self._embed.get_base()
@@ -63,5 +63,5 @@ class HelpView(BasePaginationView):
 
     @property
     @override
-    def embed(self) -> PaginationEmbed:
+    def embed(self) -> PaginationEmbedFactory:
         return self._embed

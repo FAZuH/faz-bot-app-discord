@@ -15,7 +15,7 @@ class TestHistoryGuildActivityView(IsolatedAsyncioTestCase):
     @staticmethod
     async def _mock_awaitable_attr() -> None: ...
 
-    @patch("faz.bot.app.discord.view.wynn_history.guild_activity_view.PaginationEmbed")
+    @patch("faz.bot.app.discord.view.wynn_history.guild_activity_view.PaginationEmbedFactory")
     async def test_run_not_empty(self, mock_embed: MagicMock) -> None:
         # Prepare
         mock_bot = MagicMock()

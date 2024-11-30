@@ -13,7 +13,7 @@ from faz.bot.app.discord.view.wynn_history.player_activity_view import PlayerAct
 
 
 class TestHistoryPlayerActivity(IsolatedAsyncioTestCase):
-    @patch("faz.bot.app.discord.view.wynn_history.player_activity_view.CustomEmbed")
+    @patch("faz.bot.app.discord.view.wynn_history.player_activity_view.CustomEmbedFactory")
     async def test_run(self, mock_embed: MagicMock) -> None:
         # Prepare
         mock_bot = MagicMock()

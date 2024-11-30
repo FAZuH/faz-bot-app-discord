@@ -2,41 +2,52 @@ from typing import Callable, Sequence
 
 import pandas as pd
 
-from faz.bot.app.discord.embed.embed_field import EmbedField
+from faz.bot.app.discord.embed_factory.embed_field import EmbedField
+from faz.bot.app.discord.parser._base_field_parser import BaseFieldParser
 from faz.bot.app.discord.select.guild_history_data_options import GuildHistoryDataOption
 from faz.bot.app.discord.select.guild_history_mode_options import GuildHistoryModeOptions
-from faz.bot.app.discord.series_parser._base_series_parser import BaseSeriesParser
 
 
-class GuildHistorySeriesParser(BaseSeriesParser):
-    def __init__(self) -> None:
+class GuildHistoryFieldParser(BaseFieldParser):
+    def __init__(
+        self,
+        mode: GuildHistoryModeOptions,
+        data: GuildHistoryDataOption,
+        guild_df: pd.DataFrame,
+        player_df: pd.DataFrame,
+    ) -> None:
+        self._mode = mode
+        self._data = data
+        self._guild_df = guild_df
+        self._player_df = player_df
+
         self._parsers: dict[
             GuildHistoryModeOptions | GuildHistoryDataOption,
-            Callable[[pd.DataFrame, pd.DataFrame], Sequence[EmbedField]],
+            Callable[[], Sequence[EmbedField]],
         ] = {}
+
         self._parsers[GuildHistoryModeOptions.OVERALL] = self._parser_overall
         self._parsers[GuildHistoryDataOption.MEMBER_LIST] = self._parser_historical_member_list
         self._parsers[GuildHistoryDataOption.GUILD_LEVEL] = self._parser_historical_guild_level
         self._parsers[GuildHistoryDataOption.TERRITORIES] = self._parser_historical_territories
 
-    def get_parser(
-        self, mode: GuildHistoryModeOptions | GuildHistoryDataOption
-    ) -> Callable[[pd.DataFrame, pd.DataFrame], Sequence[EmbedField]]:
-        ret = self._parsers.get(mode, None)
-        if ret is None:
-            raise ValueError(f"Invalid mode: {mode}")
-        return ret
+    def get_fields(self) -> Sequence[EmbedField]:
+        if self._mode == GuildHistoryModeOptions.OVERALL:
+            parser = self._parsers[self._mode]
+        else:
+            parser = self._parsers[self._data]
+        return parser()
 
     def _parser_overall(
-        self, guild_df: pd.DataFrame, player_df: pd.DataFrame
+        self,
     ) -> Sequence[EmbedField]:
-        player_df.replace("", "None", inplace=True)
-        guild_df.replace("", "None", inplace=True)
+        self._player_df.replace("", "None", inplace=True)
+        self._guild_df.replace("", "None", inplace=True)
         ret: Sequence[EmbedField] = []
-        if len(guild_df) == 0:
+        if len(self._guild_df) == 0:
             return []
-        earliest: pd.Series = guild_df.iloc[guild_df["datetime"].idxmin()]  # type: ignore
-        latest: pd.Series = guild_df.iloc[guild_df["datetime"].idxmax()]  # type: ignore
+        earliest: pd.Series = self._guild_df.iloc[self._guild_df["datetime"].idxmin()]  # type: ignore
+        latest: pd.Series = self._guild_df.iloc[self._guild_df["datetime"].idxmax()]  # type: ignore
 
         level1 = earliest["level"]
         level2 = latest["level"]
@@ -47,8 +58,8 @@ class GuildHistorySeriesParser(BaseSeriesParser):
         # HACK: This is inefficient
         lines_guild = {}
         lines_rank = {}
-        for uuid in pd.unique(player_df["uuid"]):
-            player = player_df[player_df["uuid"] == uuid]
+        for uuid in pd.unique(self._player_df["uuid"]):
+            player = self._player_df[self._player_df["uuid"] == uuid]
             earliest_: pd.Series = player.iloc[player["datetime"].idxmin()]  # type: ignore
             latest_: pd.Series = player.iloc[player["datetime"].idxmax()]  # type: ignore
 
@@ -84,18 +95,18 @@ class GuildHistorySeriesParser(BaseSeriesParser):
         return ret
 
     def _parser_historical_member_list(
-        self, guild_df: pd.DataFrame, player_df: pd.DataFrame
+        self,
     ) -> Sequence[EmbedField]:
         """
         Assumption:
         - player_df is sorted by `datetime` column, ascending
         """
-        player_df.replace("", "None", inplace=True)
-        guild_df.replace("", "None", inplace=True)
+        self._player_df.replace("", "None", inplace=True)
+        self._guild_df.replace("", "None", inplace=True)
         lines = []
         prev_value = None
-        for uuid in pd.unique(player_df["uuid"]):
-            player = player_df[player_df["uuid"] == uuid]
+        for uuid in pd.unique(self._player_df["uuid"]):
+            player = self._player_df[self._player_df["uuid"] == uuid]
             lines.append(f"**{player.iloc[-1]["username"]}**")
             new_lines = []
             for _, row in player.iterrows():
@@ -119,13 +130,13 @@ class GuildHistorySeriesParser(BaseSeriesParser):
         return ret
 
     def _parser_historical_guild_level(
-        self, guild_df: pd.DataFrame, player_df: pd.DataFrame
+        self,
     ) -> Sequence[EmbedField]:
-        player_df.replace("", "None", inplace=True)
-        guild_df.replace("", "None", inplace=True)
+        self._player_df.replace("", "None", inplace=True)
+        self._guild_df.replace("", "None", inplace=True)
         lines = []
         prev_value = None
-        for _, row in guild_df.iterrows():
+        for _, row in self._guild_df.iterrows():
             value = row["level"]
             if prev_value == value:
                 continue
@@ -139,7 +150,7 @@ class GuildHistorySeriesParser(BaseSeriesParser):
         return ret
 
     def _parser_historical_territories(
-        self, guild_df: pd.DataFrame, player_df: pd.DataFrame
+        self,
     ) -> Sequence[EmbedField]:
         """dungeon_completions, quest_completions, raid_completions"""
         return [EmbedField("", value="UNIMPLEMENTED")]

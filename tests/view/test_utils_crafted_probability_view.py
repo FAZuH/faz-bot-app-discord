@@ -32,7 +32,7 @@ class TestUtilsCraftedProbabilityView(IsolatedAsyncioTestCase):
             embed=mock_embed.return_value, view=self._view
         )
 
-    @patch("faz.bot.app.discord.view.wynn_utils.crafted_probability_view.CustomEmbed")
+    @patch("faz.bot.app.discord.view.wynn_utils.crafted_probability_view.CustomEmbedFactory")
     async def test_get_base_embed(self, mock_embed: MagicMock) -> None:
         # Act
         self._view._get_base_embed()
@@ -52,7 +52,7 @@ class TestUtilsCraftedProbabilityView(IsolatedAsyncioTestCase):
             "- `[4]`: 1 to 2, 50% boost",
         )
 
-    @patch("faz.bot.app.discord.view.wynn_utils.crafted_probability_view.CustomEmbed")
+    @patch("faz.bot.app.discord.view.wynn_utils.crafted_probability_view.CustomEmbedFactory")
     async def test_get_craftprobs_embed(self, mock_embed: MagicMock) -> None:
         # Act
         self._view._get_craftprobs_embed()
@@ -69,7 +69,7 @@ class TestUtilsCraftedProbabilityView(IsolatedAsyncioTestCase):
             inline=False,
         )
 
-    @patch("faz.bot.app.discord.view.wynn_utils.crafted_probability_view.CustomEmbed")
+    @patch("faz.bot.app.discord.view.wynn_utils.crafted_probability_view.CustomEmbedFactory")
     async def test_get_atleast_embed(self, mock_embed: MagicMock) -> None:
         # Act
         self._view._get_atleast_embed()
@@ -86,7 +86,7 @@ class TestUtilsCraftedProbabilityView(IsolatedAsyncioTestCase):
             inline=False,
         )
 
-    @patch("faz.bot.app.discord.view.wynn_utils.crafted_probability_view.CustomEmbed")
+    @patch("faz.bot.app.discord.view.wynn_utils.crafted_probability_view.CustomEmbedFactory")
     async def test_get_atmost_getcraftprobs_embed(self, mock_embed: MagicMock) -> None:
         # Act
         self._view._get_atmost_embed()

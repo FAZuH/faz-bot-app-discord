@@ -6,7 +6,7 @@ from typing import Any, Literal, override, TYPE_CHECKING
 from nextcord import Color
 from tabulate import tabulate
 
-from faz.bot.app.discord.embed.pagination_embed import PaginationEmbed
+from faz.bot.app.discord.embed_factory.pagination_embed_factory import PaginationEmbedFactory
 from faz.bot.app.discord.view._base_pagination_view import BasePaginationView
 from faz.bot.app.discord.view._view_utils import ViewUtils
 
@@ -27,7 +27,7 @@ class WorldlistView(BasePaginationView):
         self._sort_by: Literal["player", "time"] = "player" if sort_by == "Player Count" else "time"
         super().__init__(bot, interaction)
 
-        self._embed: PaginationEmbed[Worlds] = PaginationEmbed(
+        self._embed: PaginationEmbedFactory[Worlds] = PaginationEmbedFactory(
             self._interaction, title="World List", color=Color.dark_teal()
         )
         self.embed.get_embed_page = self._get_embed_page
@@ -38,7 +38,7 @@ class WorldlistView(BasePaginationView):
         self.embed.items = items
         await self._interaction.send(embed=self._get_embed_page(1), view=self)
 
-    def _get_embed_page(self, page: int) -> PaginationEmbed:
+    def _get_embed_page(self, page: int) -> PaginationEmbedFactory:
         embed = self._embed.get_base()
         embed.current_page = page
         worlds = embed.get_items(page)
@@ -69,5 +69,5 @@ class WorldlistView(BasePaginationView):
 
     @property
     @override
-    def embed(self) -> PaginationEmbed:
+    def embed(self) -> PaginationEmbedFactory:
         return self._embed

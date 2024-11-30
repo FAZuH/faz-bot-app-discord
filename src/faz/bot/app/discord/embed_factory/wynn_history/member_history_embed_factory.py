@@ -3,15 +3,16 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from datetime import datetime
-from typing import override, Sequence, TYPE_CHECKING
+from typing import override, Self, TYPE_CHECKING
 from uuid import UUID
 
 from nextcord import Colour
 import pandas as pd
 
-from faz.bot.app.discord.embed.embed_field import EmbedField
-from faz.bot.app.discord.embed.pagination_embed import PaginationEmbed
-from faz.bot.app.discord.series_parser.member_history_series_parser import MemberHistorySeriesParser
+from faz.bot.app.discord.embed_factory.wynn_history._base_wynn_history_embed_factory import (
+    BaseWynnHistoryEmbedFactory,
+)
+from faz.bot.app.discord.parser.member_history_field_parser import MemberHistoryFieldParser
 
 if TYPE_CHECKING:
     from faz.bot.database.fazwynn.model.player_info import PlayerInfo
@@ -21,7 +22,7 @@ if TYPE_CHECKING:
     from faz.bot.app.discord.view.wynn_history.member_history_view import MemberHistoryView
 
 
-class MemberHistoryEmbed(PaginationEmbed[EmbedField]):
+class MemberHistoryEmbedFactory(BaseWynnHistoryEmbedFactory):
     def __init__(
         self,
         view: MemberHistoryView,
@@ -47,93 +48,61 @@ class MemberHistoryEmbed(PaginationEmbed[EmbedField]):
 
         self._db = view.bot.app.create_fazwynn_db()
 
+    @override
     async def setup(self) -> None:
+        await self._player.awaitable_attrs.characters
         async with asyncio.TaskGroup() as tg:
             tg.create_task(self._fetch_data())
             tg.create_task(self._setup_parser())
 
-    async def get_fields(
+    @override
+    async def setup_fields(
         self,
         data: MemberHistoryDataOption,
         mode: MemberHistoryModeOption,
-    ) -> Sequence[EmbedField]:
+    ) -> None:
         # Prepare
-        fields: Sequence[EmbedField] = []
-        parser = self._parsers.get_parser(data, mode)
-        fields = parser(self._char_df, self._member_df)
-        if not fields:
-            return [
-                EmbedField(
-                    mode.value,
-                    "No data found within the selected period of time.",
-                )
-            ]
-        return fields
+        fields = MemberHistoryFieldParser(
+            data, mode, self._char_df, self._member_df, self._character_labels
+        ).get_fields()
+        self.items = fields or [self.get_empty_field_embed(mode.value)]
 
     @override
-    def get_embed_page(self, page: int | None = None) -> MemberHistoryEmbed:
-        """Build specific page of the PaginationEmbed."""
-        if page is None:
-            page = self.current_page
-        embed = self.get_base()
-        fields = embed.get_items(page)
-
-        if len(fields) == 0:
-            embed.description = "```ml\nNo data found.\n```"
-        else:
-            for field in fields:
-                embed.add_field(
-                    name=field.name,
-                    value=field.value,
-                    inline=field.inline,
-                )
-
-        embed.finalize()
+    def get_embed_page(self, page: int | None = None) -> Self:
+        embed = super().get_embed_page(page)
         return embed
 
     async def _fetch_data(self) -> None:
-        db = self._db
-        player = self._player
-        begin = self._period_begin
-        end = self._period_end
-
-        await player.awaitable_attrs.characters
-
         self._char_df = pd.DataFrame()
 
         for ch in self._player.characters:
-            df_char_ = db.character_history.select_between_period_as_dataframe(
-                ch.character_uuid, begin, end
+            df_char_ = self._db.character_history.select_between_period_as_dataframe(
+                ch.character_uuid, self._period_begin, self._period_end
             )
             if df_char_.empty:
                 continue
             self._char_df = pd.concat([self._char_df, df_char_])
 
-        self._member_df = db.guild_member_history.select_between_period_as_dataframe(
-            player.uuid, begin, end
+        self._member_df = self._db.guild_member_history.select_between_period_as_dataframe(
+            self._player.uuid, self._period_begin, self._period_end
         )
 
     async def _setup_parser(self) -> None:
-        db = self._db
-        begin = self._period_begin
-        end = self._period_end
-
-        await self._player.awaitable_attrs.characters
-
         ch_counter = defaultdict(int)
-        character_labels = {}
+        self._character_labels = {}
         for ch in self._player.characters:
-            ch_hists = await db.character_history.select_between_period(
-                ch.character_uuid, begin, end
+            ch_hists = await self._db.character_history.select_between_period(
+                ch.character_uuid, self._period_begin, self._period_end
             )
             if len(ch_hists) == 0:
                 continue
+
             ch_counter[ch.type] += 1
-            # select ch_hist with max datetime
+
             latest_ch_hist = max(ch_hists, key=lambda x: x.datetime)
             total_level = latest_ch_hist.get_total_level()
+
             label = f"{ch.type}{ch_counter[ch.type]} (Lv. {total_level})"
             uuid = str(UUID(bytes=ch.character_uuid))
-            character_labels[uuid] = label
 
-        self._parsers = MemberHistorySeriesParser(character_labels)
+            self._character_labels[uuid] = label

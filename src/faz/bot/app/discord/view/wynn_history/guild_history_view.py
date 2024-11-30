@@ -3,7 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, override, TYPE_CHECKING
 
-from faz.bot.app.discord.embed.guild_history_embed import GuildHistoryEmbed
+from faz.bot.app.discord.embed_factory.wynn_history.guild_history_embed_factory import (
+    GuildHistoryEmbedFactory,
+)
 from faz.bot.app.discord.select.guild_history_data_options import GuildHistoryDataOption
 from faz.bot.app.discord.select.guild_history_data_select import GuildHistoryDataSelect
 from faz.bot.app.discord.select.guild_history_mode_options import GuildHistoryModeOptions
@@ -56,7 +58,7 @@ class GuildHistoryView(BasePaginationView):
         self._period_begin = period_begin
         self._period_end = period_end
 
-        self._embed = GuildHistoryEmbed(
+        self._embed = GuildHistoryEmbedFactory(
             self,
             self._guild,
             self._period_begin,
@@ -75,40 +77,35 @@ class GuildHistoryView(BasePaginationView):
         """Initial method to setup and run the view."""
         self.add_item(self._mode_select)
 
-        await self._set_embed_fields()
-        embed = self.embed.get_embed_page()
+        await self.embed.setup()
+        embed = await self._get_embed_page()
         await self._interaction.send(embed=embed, view=self)
 
     async def _mode_select_callback(self, interaction: Interaction) -> None:
         """Callback for mode selection."""
         # Length of values is always 1
         self._selected_mode = self._mode_select.get_selected_option()
-        if self._selected_mode == GuildHistoryModeOptions.HISTORICAL:
-            self.add_item(self._data_select)
-        else:
+        if self._selected_mode == GuildHistoryModeOptions.OVERALL:
             self.remove_item(self._data_select)
-        await self._set_embed_fields()
-        embed = self.embed.get_embed_page()
+        elif self._data_select not in self.children:
+            self.add_item(self._data_select)
+        embed = await self._get_embed_page()
         await interaction.edit(embed=embed, view=self)
 
     async def _data_select_callback(self, interaction: Interaction) -> None:
         """Callback for data selection."""
         # Length of values is always 1
         self._selected_data = self._data_select.get_selected_option()
-        await self._set_embed_fields()
-        embed = self.embed.get_embed_page()
+        embed = await self._get_embed_page()
         await interaction.edit(embed=embed, view=self)
 
-    async def _set_embed_fields(self) -> None:
-        """Sets PaginationEmbed items with fields based on selected options."""
-        if self._selected_mode == GuildHistoryModeOptions.HISTORICAL:
-            fields = await self.embed.get_fields(self._selected_data)
-        else:
-            fields = await self.embed.get_fields(self._selected_mode)
-        self.embed.items = fields
+    async def _get_embed_page(self) -> GuildHistoryEmbedFactory:
+        await self.embed.setup_fields(self._selected_data, self._selected_mode)
+        embed = self.embed.get_embed_page()
+        return embed
 
     @property
     @override
-    def embed(self) -> GuildHistoryEmbed:
+    def embed(self) -> GuildHistoryEmbedFactory:
         """The embed property."""
         return self._embed

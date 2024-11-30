@@ -9,7 +9,7 @@ from nextcord import Color
 from sortedcontainers import SortedList
 from tabulate import tabulate
 
-from faz.bot.app.discord.embed.pagination_embed import PaginationEmbed
+from faz.bot.app.discord.embed_factory.pagination_embed_factory import PaginationEmbedFactory
 from faz.bot.app.discord.view._base_pagination_view import BasePaginationView
 from faz.bot.app.discord.view._view_utils import ViewUtils
 
@@ -45,7 +45,7 @@ class GuildActivityView(BasePaginationView):
         desc = f"`Guild  : `{self._guild.name}\n"
         desc += f"`Period : `<t:{begin_ts}:R> to <t:{end_ts}:R>"
 
-        self._embed: PaginationEmbed[SortedList] = PaginationEmbed(
+        self._embed: PaginationEmbedFactory[SortedList] = PaginationEmbedFactory(
             self._interaction,
             self._activity_res,
             title=title,
@@ -73,7 +73,7 @@ class GuildActivityView(BasePaginationView):
         embed = self.embed.get_embed_page(1)
         await self._interaction.send(embed=embed, view=self)
 
-    def _get_embed_page(self, page: int = 1) -> PaginationEmbed:
+    def _get_embed_page(self, page: int = 1) -> PaginationEmbedFactory:
         embed = self.embed.get_base()
         items = embed.get_items(page)
 
@@ -98,7 +98,7 @@ class GuildActivityView(BasePaginationView):
 
     @property
     @override
-    def embed(self) -> PaginationEmbed[SortedList]:
+    def embed(self) -> PaginationEmbedFactory[SortedList]:
         return self._embed
 
     @staticmethod

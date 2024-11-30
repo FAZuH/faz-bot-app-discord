@@ -13,7 +13,7 @@ from faz.bot.app.discord.view.wynn_stat.worldlist_view import WorldlistView
 
 
 class TestStatWorldlistView(IsolatedAsyncioTestCase):
-    @patch("faz.bot.app.discord.view.wynn_stat.worldlist_view.PaginationEmbed")
+    @patch("faz.bot.app.discord.view.wynn_stat.worldlist_view.PaginationEmbedFactory")
     async def test_run(self, mock_embed: MagicMock) -> None:
         # Prepare
         mock_bot = MagicMock()

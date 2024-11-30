@@ -3,51 +3,60 @@ from uuid import UUID
 
 import pandas as pd
 
-from faz.bot.app.discord.embed.embed_field import EmbedField
+from faz.bot.app.discord.embed_factory.embed_field import EmbedField
+from faz.bot.app.discord.parser._base_field_parser import BaseFieldParser
 from faz.bot.app.discord.select.member_history_data_option import MemberHistoryDataOption
 from faz.bot.app.discord.select.member_history_mode_option import MemberHistoryModeOption
-from faz.bot.app.discord.series_parser._base_series_parser import BaseSeriesParser
 
 
-class MemberHistorySeriesParser(BaseSeriesParser):
-    def __init__(self, character_labels: dict[str, str]) -> None:
+class MemberHistoryFieldParser(BaseFieldParser):
+    def __init__(
+        self,
+        data: MemberHistoryDataOption,
+        mode: MemberHistoryModeOption,
+        char_df: pd.DataFrame,
+        member_df: pd.DataFrame,
+        character_labels: dict[str, str],
+    ) -> None:
+        self._data = data
+        self._mode = mode
+        self._char_df = char_df
+        self._member_df = member_df
         self._character_labels = character_labels
 
-        hist_prsr = {}
-        hist_prsr[MemberHistoryDataOption.WARS] = self._parser_historical_wars
-        hist_prsr[MemberHistoryDataOption.XP_CONTRIBUTION] = self._parser_historical_contributed
         self._historical_parsers: dict[
             MemberHistoryDataOption,
-            Callable[[pd.DataFrame, pd.DataFrame], Sequence[EmbedField]],
-        ] = hist_prsr
+            Callable[[], Sequence[EmbedField]],
+        ] = {}
 
-    def get_parser(
-        self, data: MemberHistoryDataOption, mode: MemberHistoryModeOption
-    ) -> Callable[[pd.DataFrame, pd.DataFrame], Sequence[EmbedField]]:
-        ret = None
-        if mode == MemberHistoryModeOption.OVERALL:
-            ret = self._parser_overall
-        elif mode == MemberHistoryModeOption.HISTORICAL:
-            ret = self._historical_parsers.get(data, None)
-        if ret is None:
-            raise ValueError(f"Invalid mode: {mode}")
-        return ret
+        hist_prsr = self._historical_parsers
+        hist_prsr[MemberHistoryDataOption.WARS] = self._parser_historical_wars
+        hist_prsr[MemberHistoryDataOption.XP_CONTRIBUTION] = self._parser_historical_contributed
+
+    def get_fields(
+        self,
+    ) -> Sequence[EmbedField]:
+        if self._mode == MemberHistoryModeOption.OVERALL:
+            parser = self._parser_overall
+        elif self._mode == MemberHistoryModeOption.HISTORICAL:
+            parser = self._historical_parsers[self._data]
+        return parser()
 
     def _parser_overall(
-        self, char_df: pd.DataFrame, member_df: pd.DataFrame
+        self,
     ) -> Sequence[EmbedField]:
         ret: Sequence[EmbedField] = []
 
         lines = {}
 
-        char_df.replace("", "None", inplace=True)
-        member_df.replace("", "None", inplace=True)
+        self._char_df.replace("", "None", inplace=True)
+        self._member_df.replace("", "None", inplace=True)
 
-        if len(char_df) == 0 and len(member_df) == 0:
+        if len(self._char_df) == 0 and len(self._member_df) == 0:
             return ret
 
-        earliest_char: pd.Series = char_df.iloc[char_df["datetime"].idxmin()]  # type: ignore
-        latest_char: pd.Series = char_df.iloc[char_df["datetime"].idxmax()]  # type: ignore
+        earliest_char: pd.Series = self._char_df.iloc[self._char_df["datetime"].idxmin()]  # type: ignore
+        latest_char: pd.Series = self._char_df.iloc[self._char_df["datetime"].idxmax()]  # type: ignore
 
         wars1 = earliest_char["wars"]
         wars2 = latest_char["wars"]
@@ -55,8 +64,8 @@ class MemberHistorySeriesParser(BaseSeriesParser):
         if wars1 != wars2:
             lines["Wars"] = f"{wars1} -> {wars2}"
 
-        earliest_member: pd.Series = member_df.iloc[member_df["datetime"].idxmin()]  # type: ignore
-        latest_member: pd.Series = member_df.iloc[member_df["datetime"].idxmax()]  # type: ignore
+        earliest_member: pd.Series = self._member_df.iloc[self._member_df["datetime"].idxmin()]  # type: ignore
+        latest_member: pd.Series = self._member_df.iloc[self._member_df["datetime"].idxmax()]  # type: ignore
 
         xp1 = earliest_member["contributed"]
         xp2 = latest_member["contributed"]
@@ -74,12 +83,10 @@ class MemberHistorySeriesParser(BaseSeriesParser):
 
     def _parser_historical_wars(
         self,
-        char_df: pd.DataFrame,
-        member_df: pd.DataFrame,
     ) -> Sequence[EmbedField]:
         ret: Sequence[EmbedField] = []
         for chuuid, chlabel in self._character_labels.items():
-            char = char_df[char_df["character_uuid"] == UUID(chuuid).bytes]
+            char = self._char_df[self._char_df["character_uuid"] == UUID(chuuid).bytes]
             lines: list[str] = []
             prev_value = None
             for _, row in char.iterrows():
@@ -98,13 +105,11 @@ class MemberHistorySeriesParser(BaseSeriesParser):
 
     def _parser_historical_contributed(
         self,
-        char_df: pd.DataFrame,
-        member_df: pd.DataFrame,
     ) -> Sequence[EmbedField]:
         ret: Sequence[EmbedField] = []
         lines: list[str] = []
         prev_value = None
-        for _, row in member_df.iterrows():
+        for _, row in self._member_df.iterrows():
             value = row["contributed"]
             if prev_value == value:
                 continue

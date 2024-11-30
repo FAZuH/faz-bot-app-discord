@@ -16,7 +16,7 @@ from nextcord.ext.commands import Cooldown
 from nextcord.ext.commands import CooldownMapping
 
 from faz.bot.app.discord.bot.errors import ApplicationException
-from faz.bot.app.discord.embed.custom_embed import CustomEmbed
+from faz.bot.app.discord.embed_factory.custom_embed_factory import CustomEmbedFactory
 
 if TYPE_CHECKING:
     from faz.bot.app.discord.bot.bot import Bot
@@ -113,7 +113,7 @@ class Events:
         self, interaction: Interaction[Any], exception: Exception
     ) -> None:
         description = f"An unexpected error occurred while executing the command: \n**{exception}**"
-        embed = CustomEmbed(
+        embed = CustomEmbedFactory(
             interaction,
             title="Unexpected Error",
             description=description,
@@ -133,7 +133,9 @@ class Events:
         self, interaction: Interaction[Any], exception: ApplicationException
     ) -> None:
         description = f"**{exception}**"
-        embed = CustomEmbed(interaction, title="Error", description=description, color=Colour.red())
+        embed = CustomEmbedFactory(
+            interaction, title="Error", description=description, color=Colour.red()
+        )
         embed.finalize()
         await interaction.send(embed=embed)
         logger.opt(exception=exception).warning(description, discord=True)
@@ -147,7 +149,7 @@ class Events:
         self, interaction: Interaction[Any], exception: ApplicationCheckFailure
     ) -> None:
         description = f"**{exception}**"
-        embed = CustomEmbed(
+        embed = CustomEmbedFactory(
             interaction,
             title="Error",
             description=description,

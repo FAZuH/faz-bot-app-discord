@@ -10,7 +10,7 @@ from faz.bot.app.discord.view.wynn_utils.convert_emerald_view import ConvertEmer
 
 
 class TestUtilsConvertEmeraldView(IsolatedAsyncioTestCase):
-    @patch("faz.bot.app.discord.view.wynn_utils.convert_emerald_view.CustomEmbed")
+    @patch("faz.bot.app.discord.view.wynn_utils.convert_emerald_view.CustomEmbedFactory")
     async def test_run(self, mock_embed: MagicMock) -> None:
         # Prepare
         embed_ins = mock_embed.return_value.get_base.return_value

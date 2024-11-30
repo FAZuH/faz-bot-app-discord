@@ -6,7 +6,7 @@ from typing import Any, override, TYPE_CHECKING
 from nextcord import Color
 from nextcord import Embed
 
-from faz.bot.app.discord.embed.custom_embed import CustomEmbed
+from faz.bot.app.discord.embed_factory.custom_embed_factory import CustomEmbedFactory
 from faz.bot.app.discord.view._base_view import BaseView
 from faz.bot.app.discord.view._view_utils import ViewUtils
 
@@ -43,7 +43,7 @@ class PlayerActivityView(BaseView):
         end_ts = int(self._period_end.timestamp())
         assert self._interaction.user
 
-        embed = CustomEmbed(
+        embed = CustomEmbedFactory(
             self._interaction,
             title=f"Player Activity ({self._player.latest_username})",
             color=Color.teal(),
