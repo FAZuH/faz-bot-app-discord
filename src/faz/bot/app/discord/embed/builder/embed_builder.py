@@ -26,7 +26,7 @@ class EmbedBuilder:
         self._embed = self._initial_embed.copy()
         self._interaction = interaction
 
-    def add_field(self, field: EmbedField) -> Self:
+    def add_embed_field(self, field: EmbedField) -> Self:
         """
         Adds a field to the embed.
 
@@ -41,6 +41,21 @@ class EmbedBuilder:
         self._embed.add_field(name=field.name, value=field.value, inline=field.inline)
         return self
 
+    def add_field(self, name: str, value: str, inline: bool = False) -> Self:
+        """
+        Adds a field to the embed.
+
+        Args:
+            name (str): The name of the field.
+            value (str): The value of the field.
+            inline (bool, optional): Whether the field should be displayed inline. Defaults to False.
+
+        Returns:
+            Self: The instance of the embed builder to allow method chaining.
+        """
+        self._embed.add_field(name=name, value=value, inline=inline)
+        return self
+
     def add_fields(self, fields: Iterable[EmbedField]) -> Self:
         """
         Adds multiple fields to the embed.
@@ -52,7 +67,7 @@ class EmbedBuilder:
             Self: The instance of the embed builder to allow method chaining.
         """
         for field in fields:
-            self.add_field(field)
+            self.add_embed_field(field)
         return self
 
     def set_colour(self, colour: Colour | int) -> Self:

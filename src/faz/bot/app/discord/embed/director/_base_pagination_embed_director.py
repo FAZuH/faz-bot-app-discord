@@ -118,12 +118,12 @@ class BasePaginationEmbedDirector[T](BaseEmbedDirector, ABC):
 
     def _add_empty_field(self, name: str, inline: bool = False) -> Self:
         field = EmbedField(name=name, value="```No data found.\n```", inline=inline)
-        self.embed_builder.add_field(field)
+        self.embed_builder.add_embed_field(field)
         return self
 
     def _add_page_field(self) -> Self:
         field = EmbedField("Page", f"({self._current_page} / {self.page_count})", False)
-        self.embed_builder.add_field(field)
+        self.embed_builder.add_embed_field(field)
         return self
 
     def _add_query_duration_footer(self, duration: float) -> Self:
