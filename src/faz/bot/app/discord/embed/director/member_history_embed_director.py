@@ -68,8 +68,8 @@ class MemberHistoryEmbedDirector(BaseFieldEmbedDirector):
             .add_line("Mode", mode.value)
             .build()
         )
-        embed = self._embed_builder.reset().set_description(description).get_embed()
-        self.embed_builder.set_builder_initial_embed(embed)
+        self.embed_builder.reset().set_description(description)
+        self._set_builder_initial_embed()
 
         return self
 

@@ -69,8 +69,8 @@ class PlayerHistoryEmbedDirector(BaseFieldEmbedDirector):
             .add_line("Data", data.value.value)
             .build()
         )
-        embed = self._embed_builder.reset().set_description(description).get_embed()
-        self.embed_builder.set_builder_initial_embed(embed)
+        self.embed_builder.reset().set_description(description)
+        self._set_builder_initial_embed()
 
         fields = self._field_builder.set_data_option(data).set_character_data(char_df).build()
         self.set_items(fields)

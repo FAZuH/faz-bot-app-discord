@@ -127,8 +127,13 @@ class BasePaginationEmbedDirector[T](BaseEmbedDirector, ABC):
         return self
 
     def _add_query_duration_footer(self, duration: float) -> Self:
-        embed = self._embed_builder.set_footer(f"Query took {duration:.2f}s").get_embed()
-        self._embed_builder.set_builder_initial_embed(embed)
+        self._embed_builder.set_footer(f"Query took {duration:.2f}s")
+        return self._set_builder_initial_embed()
+
+    def _set_builder_initial_embed(self) -> Self:
+        """Set the initial embed for the embed builder based on the current state of the builder."""
+        embed = self.embed_builder.get_embed()
+        self.embed_builder.set_builder_initial_embed(embed)
         return self
 
     def _check_page(self, page: int) -> bool:
