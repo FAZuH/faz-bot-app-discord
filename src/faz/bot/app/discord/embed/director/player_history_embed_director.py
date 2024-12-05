@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from time import time
 from typing import override, Self, TYPE_CHECKING
 from uuid import UUID
 
@@ -47,7 +48,9 @@ class PlayerHistoryEmbedDirector(BaseFieldEmbedDirector):
     @override
     async def setup(self) -> None:
         """Async initialization method. Must be run once."""
+        start = time()
         await self._fetch_data()
+        self._add_query_duration_footer(time() - start)
         self._field_builder.set_data(self._player_df, self._char_df)
 
     def set_options(self, data: PlayerHistoryDataOption, character_uuid: str | None = None) -> Self:

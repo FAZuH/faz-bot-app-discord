@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from time import time
 from typing import Any, override, TYPE_CHECKING
 
 from nextcord import Embed
@@ -40,11 +41,13 @@ class PlayerActivityView(BaseView):
         end_ts = int(self._period_end.timestamp())
         assert self._interaction.user
 
+        start = time()
         time_period = (
             await self._bot.fazwynn_db.player_activity_history.get_playtime_between_period(
                 self._player.uuid, self._period_begin, self._period_end
             )
         )
+        duration = time() - start
 
         desc = f"`Playtime : ` {ViewUtils.format_timedelta(time_period)}"
         desc += f"\n`Period   : ` <t:{begin_ts}:R> to <t:{end_ts}:R>"
@@ -55,6 +58,7 @@ class PlayerActivityView(BaseView):
             )
             .set_title(f"Player Activity ({self._player.latest_username})")
             .set_description(desc)
+            .set_footer(f"Query duration: {duration:.2f}s")
             .build()
         )
         return embed

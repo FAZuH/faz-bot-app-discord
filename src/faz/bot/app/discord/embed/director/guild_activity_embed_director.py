@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
+from time import time
 from typing import Iterable, override, TYPE_CHECKING
 
 from nextcord import Embed
@@ -48,7 +50,9 @@ class GuildActivityEmbedDirector(BaseTableEmbedDirector):
 
     @override
     async def setup(self) -> None:
+        start = time()
         await self._fetch_data()
+        self._add_query_duration_footer(time() - start)
         self._parse_items()
 
     def _parse_items(self) -> None:
