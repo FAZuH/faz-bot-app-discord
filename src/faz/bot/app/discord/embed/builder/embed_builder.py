@@ -143,7 +143,8 @@ class EmbedBuilder:
         Returns:
             Embed: The fully constructed embed object.
         """
-        self._add_author()
+        if self._interaction:
+            self._add_author(self._interaction)
         return self._embed
 
     def reset(self) -> Self:
@@ -178,7 +179,20 @@ class EmbedBuilder:
         self._initial_embed = embed
         return self
 
-    def _add_author(self) -> Self:
+    def set_builder_interaction(self, interaction: Interaction[Any]) -> Self:
+        """
+        Sets the interaction for this builder.
+
+        Args:
+            interaction (Interaction[Any]): The interaction to set.
+
+        Returns:
+            Self: The instance of the embed builder to allow method chaining.
+        """
+        self._interaction = interaction
+        return self
+
+    def _add_author(self, interaction: Interaction[Any]) -> Self:
         """
         Adds author information to the embed.
 
@@ -190,27 +204,11 @@ class EmbedBuilder:
         Raises:
             AssertionError: If the user is None.
         """
-        user = self.interaction.user
+        user = interaction.user
         assert user, "User is None. Who is calling this command?"
         self._embed.set_author(
             name=user.display_name,
             icon_url=user.display_avatar.url,
         )
-        self._embed.timestamp = self.interaction.created_at
+        self._embed.timestamp = interaction.created_at
         return self
-
-    @property
-    def interaction(self) -> Interaction[Any]:
-        """
-        Returns the interaction associated with this embed.
-
-        Returns:
-            Interaction[Any]: The interaction object.
-
-        Raises:
-            ValueError: If interaction is not set.
-        """
-        ret = self._interaction
-        if ret is None:
-            raise ValueError("Interaction is not set.")
-        return ret
