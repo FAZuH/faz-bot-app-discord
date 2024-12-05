@@ -161,6 +161,20 @@ wheels = [
 ]
 
 [[package]]
+name = "behave"
+version = "1.2.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "parse" },
+    { name = "parse-type" },
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c8/4b/d0a8c23b6c8985e5544ea96d27105a273ea22051317f850c2cdbf2029fe4/behave-1.2.6.tar.gz", hash = "sha256:b9662327aa53294c1351b0a9c369093ccec1d21026f050c3bd9b3e5cccf81a86", size = 701696 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a8/6c/ec9169548b6c4cb877aaa6773408ca08ae2a282805b958dbc163cb19822d/behave-1.2.6-py2.py3-none-any.whl", hash = "sha256:ebda1a6c9e5bfe95c5f9f0a2794e01c7098b3dde86c10a95d8621c5907ff6f1c", size = 136779 },
+]
+
+[[package]]
 name = "black"
 version = "24.10.0"
 source = { registry = "https://pypi.org/simple" }
@@ -376,6 +390,7 @@ dependencies = [
 dev = [
     { name = "alembic" },
     { name = "autotyping" },
+    { name = "behave" },
     { name = "black" },
     { name = "isort" },
     { name = "pytest" },
@@ -407,6 +422,7 @@ requires-dist = [
 dev = [
     { name = "alembic", specifier = ">=1.14.0" },
     { name = "autotyping", specifier = ">=24.9.0" },
+    { name = "behave", specifier = ">=1.2.6" },
     { name = "black", specifier = ">=24.10.0" },
     { name = "isort", specifier = ">=5.13.2" },
     { name = "pytest", specifier = ">=8.3.3" },
@@ -913,6 +929,28 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/25/b0/98d6ae2e1abac4f35230aa756005e8654649d305df9a28b16b9ae4353bff/pandas-2.2.3-cp313-cp313t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1db71525a1538b30142094edb9adc10be3f3e176748cd7acc2240c2f2e5aa3a4", size = 11871013 },
     { url = "https://files.pythonhosted.org/packages/cc/57/0f72a10f9db6a4628744c8e8f0df4e6e21de01212c7c981d31e50ffc8328/pandas-2.2.3-cp313-cp313t-musllinux_1_2_aarch64.whl", hash = "sha256:15c0e1e02e93116177d29ff83e8b1619c93ddc9c49083f237d4312337a61165d", size = 15711620 },
     { url = "https://files.pythonhosted.org/packages/ab/5f/b38085618b950b79d2d9164a711c52b10aefc0ae6833b96f626b7021b2ed/pandas-2.2.3-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:ad5b65698ab28ed8d7f18790a0dc58005c7629f227be9ecc1072aa74c0c1d43a", size = 13098436 },
+]
+
+[[package]]
+name = "parse"
+version = "1.20.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4f/78/d9b09ba24bb36ef8b83b71be547e118d46214735b6dfb39e4bfde0e9b9dd/parse-1.20.2.tar.gz", hash = "sha256:b41d604d16503c79d81af5165155c0b20f6c8d6c559efa66b4b695c3e5a0a0ce", size = 29391 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d0/31/ba45bf0b2aa7898d81cbbfac0e88c267befb59ad91a19e36e1bc5578ddb1/parse-1.20.2-py2.py3-none-any.whl", hash = "sha256:967095588cb802add9177d0c0b6133b5ba33b1ea9007ca800e526f42a85af558", size = 20126 },
+]
+
+[[package]]
+name = "parse-type"
+version = "0.6.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "parse" },
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/17/e9/a3b2ae5f8a852542788ac1f1865dcea0c549cc40af243f42cabfa0acf24d/parse_type-0.6.4.tar.gz", hash = "sha256:5e1ec10440b000c3f818006033372939e693a9ec0176f446d9303e4db88489a6", size = 96480 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d5/b3/f6cc950042bfdbe98672e7c834d930f85920fb7d3359f59096e8d2799617/parse_type-0.6.4-py2.py3-none-any.whl", hash = "sha256:83d41144a82d6b8541127bf212dd76c7f01baff680b498ce8a4d052a7a5bce4c", size = 27442 },
 ]
 
 [[package]]
