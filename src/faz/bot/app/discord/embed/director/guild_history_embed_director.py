@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from asyncio import gather
+from concurrent.futures import ThreadPoolExecutor
 from time import time
 from typing import override, Self, TYPE_CHECKING
 
@@ -29,6 +31,10 @@ class GuildHistoryEmbedDirector(BaseFieldEmbedDirector):
         period_begin: datetime,
         period_end: datetime,
     ) -> None:
+        embed_builder = EmbedBuilder(view.interaction, Embed(title=f"Guild History ({guild.name})"))
+        super().__init__(embed_builder, items_per_page=5)
+
+        self._view = view
         self._period_begin = period_begin
         self._period_end = period_end
         self._guild = guild
@@ -37,14 +43,10 @@ class GuildHistoryEmbedDirector(BaseFieldEmbedDirector):
         end_ts = int(period_end.timestamp())
 
         self._desc_builder = DescriptionBuilder([("Period", f"<t:{begin_ts}:R> to <t:{end_ts}:R>")])
-        self._embed_builder = EmbedBuilder(
-            view.interaction, Embed(title=f"Guild History ({guild.name})")
-        )
         self.field_builder = GuildHistoryFieldBuilder()
+        self._embed_builder = embed_builder
 
         self._db = view.bot.app.create_fazwynn_db()
-
-        super().__init__(self._embed_builder, items_per_page=5)
 
     @override
     async def setup(self) -> None:
@@ -70,16 +72,36 @@ class GuildHistoryEmbedDirector(BaseFieldEmbedDirector):
 
     async def _fetch_data(self) -> None:
         await self._guild.awaitable_attrs.members
+        player_df = pd.DataFrame()
+        begin = self._period_begin
+        end = self._period_end
+        event_loop = self._view.bot._event_loop
 
-        self._player_df = pd.DataFrame()
-        for member in self._guild.members:
-            player_df_: pd.DataFrame = self._db.player_history.select_between_period_as_dataframe(
-                member.uuid, self._period_begin, self._period_end
+        with ThreadPoolExecutor() as executor:
+            tasks = [
+                event_loop.run_in_executor(
+                    executor,
+                    self._db.player_history.select_between_period_as_dataframe,
+                    member.uuid,
+                    begin,
+                    end,
+                )
+                for member in self._guild.members
+            ]
+
+            results = await gather(*tasks)
+
+            for res in results:
+                if res.emty:
+                    continue
+                player_df = pd.concat([player_df, res])
+
+            self._guild_df = await event_loop.run_in_executor(
+                executor,
+                self._db.guild_history.select_between_period_as_dataframe,
+                self._guild.uuid,
+                begin,
+                end,
             )
-            if player_df_.empty:
-                continue
-            self._player_df = pd.concat([self._player_df, player_df_])
 
-        self._guild_df = self._db.guild_history.select_between_period_as_dataframe(
-            self._guild.uuid, self._period_begin, self._period_end
-        )
+        self._player_df = player_df

@@ -1,9 +1,10 @@
 from __future__ import annotations
-
+from asyncio import gather
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from time import time
-from typing import override, Self, TYPE_CHECKING
+from time import perf_counter
+from typing import Self, TYPE_CHECKING, override
 from uuid import UUID
 
 from nextcord import Embed
@@ -11,8 +12,12 @@ import pandas as pd
 
 from faz.bot.app.discord.embed.builder.description_builder import DescriptionBuilder
 from faz.bot.app.discord.embed.builder.embed_builder import EmbedBuilder
-from faz.bot.app.discord.embed.builder.member_history_field_builder import MemberHistoryFieldBuilder
-from faz.bot.app.discord.embed.director._base_field_embed_director import BaseFieldEmbedDirector
+from faz.bot.app.discord.embed.builder.member_history_field_builder import (
+    MemberHistoryFieldBuilder,
+)
+from faz.bot.app.discord.embed.director._base_field_embed_director import (
+    BaseFieldEmbedDirector,
+)
 
 if TYPE_CHECKING:
     from faz.bot.database.fazwynn.model.player_info import PlayerInfo
@@ -30,6 +35,12 @@ class MemberHistoryEmbedDirector(BaseFieldEmbedDirector):
         period_begin: datetime,
         period_end: datetime,
     ) -> None:
+        embed_builder = EmbedBuilder(
+            view.interaction, Embed(title=f"Member History ({player.latest_username})")
+        )
+        super().__init__(embed_builder, items_per_page=5)
+
+        self._view = view
         self._period_begin = period_begin
         self._period_end = period_end
         self._player = player
@@ -38,21 +49,19 @@ class MemberHistoryEmbedDirector(BaseFieldEmbedDirector):
         end_ts = int(period_end.timestamp())
 
         self._desc_builder = DescriptionBuilder([("Period", f"<t:{begin_ts}:R> to <t:{end_ts}:R>")])
-        self._embed_builder = EmbedBuilder(
-            view.interaction, Embed(title=f"Member History ({self._player.latest_username})")
-        )
+        self._embed_builder = embed_builder
         self.field_builder = MemberHistoryFieldBuilder()
 
         self._db = view.bot.app.create_fazwynn_db()
 
-        super().__init__(self._embed_builder, items_per_page=5)
-
     @override
     async def setup(self) -> None:
         await self._player.awaitable_attrs.characters
-        start = time()
-        self._fetch_data()
-        self._add_query_duration_footer(time() - start)
+
+        start = perf_counter()
+        await self._fetch_data()
+        self._add_query_duration_footer(perf_counter() - start)
+
         await self._setup_character_lables()
         self.field_builder.set_data(self._char_df, self._member_df).set_character_labels(
             self._character_labels
@@ -73,20 +82,40 @@ class MemberHistoryEmbedDirector(BaseFieldEmbedDirector):
 
         return self
 
-    def _fetch_data(self) -> None:
-        self._char_df = pd.DataFrame()
+    async def _fetch_data(self) -> None:
+        char_df = pd.DataFrame()
+        begin = self._period_begin
+        end = self._period_end
+        event_loop = self._view.bot._event_loop
 
-        for ch in self._player.characters:
-            df_char_ = self._db.character_history.select_between_period_as_dataframe(
-                ch.character_uuid, self._period_begin, self._period_end
+        with ThreadPoolExecutor() as executor:
+            tasks = [
+                event_loop.run_in_executor(
+                    executor,
+                    self._db.character_history.select_between_period_as_dataframe,
+                    ch.character_uuid,
+                    begin,
+                    end,
+                )
+                for ch in self._player.characters
+            ]
+
+            results = await gather(*tasks)
+
+            for res in results:
+                if res.empty:
+                    continue
+                char_df = pd.concat([char_df, res])
+
+            self._member_df = await event_loop.run_in_executor(
+                executor,
+                self._db.guild_member_history.select_between_period_as_dataframe,
+                self._player.uuid,
+                begin,
+                end,
             )
-            if df_char_.empty:
-                continue
-            self._char_df = pd.concat([self._char_df, df_char_])
 
-        self._member_df = self._db.guild_member_history.select_between_period_as_dataframe(
-            self._player.uuid, self._period_begin, self._period_end
-        )
+        self._char_df = char_df
 
     async def _setup_character_lables(self) -> None:
         ch_counter = defaultdict(int)
