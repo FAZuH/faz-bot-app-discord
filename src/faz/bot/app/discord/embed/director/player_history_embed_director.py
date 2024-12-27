@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from asyncio import gather
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from time import perf_counter
 from typing import override, Self, TYPE_CHECKING
 from uuid import UUID
-from concurrent.futures import ThreadPoolExecutor
 
 from faz.bot.database.fazwynn.model.player_info import PlayerInfo
 from nextcord import Embed

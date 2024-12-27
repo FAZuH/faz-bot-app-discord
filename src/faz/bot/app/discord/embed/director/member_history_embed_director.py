@@ -1,10 +1,11 @@
 from __future__ import annotations
+
 from asyncio import gather
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from time import perf_counter
-from typing import Self, TYPE_CHECKING, override
+from typing import override, Self, TYPE_CHECKING
 from uuid import UUID
 
 from nextcord import Embed
@@ -12,12 +13,8 @@ import pandas as pd
 
 from faz.bot.app.discord.embed.builder.description_builder import DescriptionBuilder
 from faz.bot.app.discord.embed.builder.embed_builder import EmbedBuilder
-from faz.bot.app.discord.embed.builder.member_history_field_builder import (
-    MemberHistoryFieldBuilder,
-)
-from faz.bot.app.discord.embed.director._base_field_embed_director import (
-    BaseFieldEmbedDirector,
-)
+from faz.bot.app.discord.embed.builder.member_history_field_builder import MemberHistoryFieldBuilder
+from faz.bot.app.discord.embed.director._base_field_embed_director import BaseFieldEmbedDirector
 
 if TYPE_CHECKING:
     from faz.bot.database.fazwynn.model.player_info import PlayerInfo
