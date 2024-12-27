@@ -18,10 +18,11 @@ class App:
         self._locks: dict[str, Lock] = {}
 
         self._properties = Properties()
-        p = self.properties
-        p.setup()
-        LoggerSetup.setup("logs", p.FAZCORD_DISCORD_LOG_WEBHOOK, p.DEV_DISCORD_ID)
+        self.properties.setup()
 
+        LoggerSetup.setup(
+            "logs", self.properties.FAZCORD_DISCORD_LOG_WEBHOOK, self.properties.DEV_DISCORD_ID
+        )
         self._bot = Bot(self)
 
     def start(self) -> None:
