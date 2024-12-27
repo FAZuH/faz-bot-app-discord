@@ -62,18 +62,34 @@ class GuildActivityEmbedDirector(BaseTableEmbedDirector):
         self.set_items(parsed_items)
 
     async def _fetch_data(self) -> None:
+        """Fetches data asynchronously, limiting the number of concurrent fetches to 10."""
         await self._guild.awaitable_attrs.members
 
         self._activities: Iterable[_ActivityResult] = SortedList()
-        for player in self._guild.members:
-            entities = await self._db.player_activity_history.get_activities_between_period(
-                player.uuid, self._period_begin, self._period_end
-            )
+        semaphore = asyncio.Semaphore(10)
+
+        async def fetch_player_activity(player):
+            async with semaphore:
+                entities = await self._db.player_activity_history.get_activities_between_period(
+                    player.uuid, self._period_begin, self._period_end
+                )
+                return entities
+
+        async def process_player(player):
+            entities = await fetch_player_activity(player)
             playtime = self._get_activity_time(entities, self._period_begin, self._period_end)
             activity_result = _ActivityResult(player.latest_username, playtime)
             if not self._show_inactive and activity_result.playtime.total_seconds() < 60:
-                continue
-            self._activities.add(activity_result)
+                return None
+            return activity_result
+
+        # Gather results asynchronously
+        tasks = [process_player(player) for player in self._guild.members]
+        results = await asyncio.gather(*tasks)
+
+        for result in results:
+            if result is not None:
+                self._activities.add(result)
 
     @staticmethod
     def _get_activity_time(
