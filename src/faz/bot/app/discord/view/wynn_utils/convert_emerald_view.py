@@ -39,15 +39,11 @@ class ConvertEmeraldView(BaseView):
             .set_description(
                 f"Converted: **{self._emeralds}**\n" f"Emeralds Total: **{self._emeralds.total}e**"
             )
+            .add_field(name="TM Set Price", value=f"{set_price_tm.emeralds}", inline=True)
             .add_field(
-                EmbedField(name="TM Set Price", value=f"{set_price_tm.emeralds}", inline=True)
-            )
-            .add_field(
-                EmbedField(
-                    name="Silverbull Set Price",
-                    value=f"{set_price_silverbull.emeralds}",
-                    inline=True,
-                )
+                name="Silverbull Set Price",
+                value=f"{set_price_silverbull.emeralds}",
+                inline=True,
             )
             .build()
         )

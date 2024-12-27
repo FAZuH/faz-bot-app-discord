@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime
+from time import time
 from typing import override, Self, TYPE_CHECKING
 from uuid import UUID
 
@@ -49,7 +50,9 @@ class MemberHistoryEmbedDirector(BaseFieldEmbedDirector):
     @override
     async def setup(self) -> None:
         await self._player.awaitable_attrs.characters
+        start = time()
         self._fetch_data()
+        self._add_query_duration_footer(time() - start)
         await self._setup_character_lables()
         self.field_builder.set_data(self._char_df, self._member_df).set_character_labels(
             self._character_labels
@@ -65,8 +68,8 @@ class MemberHistoryEmbedDirector(BaseFieldEmbedDirector):
             .add_line("Mode", mode.value)
             .build()
         )
-        embed = self._embed_builder.reset().set_description(description).get_embed()
-        self.embed_builder.set_builder_initial_embed(embed)
+        self.embed_builder.reset().set_description(description)
+        self._set_builder_initial_embed()
 
         return self
 

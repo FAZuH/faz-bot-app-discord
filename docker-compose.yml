@@ -15,6 +15,22 @@ services:
     volumes:
       - ./logs:/app/logs
 
+  faz-bot-discord_test:
+    image: ghcr.io/fazuh/faz-bot-discord:latest
+    container_name: faz-bot-discord_test
+    build:
+      context: .
+    restart: unless-stopped
+    environment:
+      MYSQL_HOST: mysql_test # Override .env
+    env_file: .env
+    expose:
+      - 8000
+    networks:
+      - faz-bot-network
+    volumes:
+      - ./logs:/app/logs
+
   mysql:
     image: mariadb:11.4.2
     container_name: mysql
@@ -24,6 +40,18 @@ services:
       - "127.0.0.1:3306:3306"
     volumes:
       - mysql:/var/lib/mysql
+    networks:
+      - faz-bot-network
+
+  mysql_test:
+    image: mariadb:11.4.2
+    container_name: mysql
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - mysql_test:/var/lib/mysql
     networks:
       - faz-bot-network
 
@@ -42,6 +70,10 @@ services:
 volumes:
   mysql:
     name: mysql
+    external: true
+
+  mysql_test:
+    name: mysql_test
     external: true
 
 networks:

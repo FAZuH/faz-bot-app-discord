@@ -60,10 +60,8 @@ class IngredientProbabilityView(BaseView):
         one_in_n = 1 / ing_util.boosted_probability
         embed = (
             self._embed_builder.add_field(
-                EmbedField(
-                    name="Boosted Drop Chance",
-                    value=f"**{ing_util.boosted_probability:.2%}** OR **1 in {one_in_n:.2f}** mobs",
-                )
+                name="Boosted Drop Chance",
+                value=f"**{ing_util.boosted_probability:.2%}** OR **1 in {one_in_n:.2f}** mobs",
             )
             .set_description(desc)
             .build()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from time import time
 from typing import override, Self, TYPE_CHECKING
 
 from nextcord import Embed
@@ -47,7 +48,9 @@ class GuildHistoryEmbedDirector(BaseFieldEmbedDirector):
 
     @override
     async def setup(self) -> None:
+        start = time()
         await self._fetch_data()
+        self._add_query_duration_footer(time() - start)
         self.field_builder.set_data(self._player_df, self._guild_df)
 
     def set_options(self, data: GuildHistoryDataOption, mode: GuildHistoryModeOptions) -> Self:
@@ -60,8 +63,8 @@ class GuildHistoryEmbedDirector(BaseFieldEmbedDirector):
             .add_line("Mode", mode.value)
             .build()
         )
-        embed = self._embed_builder.reset().set_description(description).get_embed()
-        self.embed_builder.set_builder_initial_embed(embed)
+        self.embed_builder.reset().set_description(description)
+        self._set_builder_initial_embed()
 
         return self
 
